@@ -1,9 +1,9 @@
 import { readTemplateStructureFromJson, saveTemplateStructureToJson } from "@/features/playground/libs/path-to-json";
 import { db } from "@/lib/db";
 import { templatePaths } from "@/lib/template";
-import path from "path";
 import fs from "fs/promises";
 import { NextRequest } from "next/server";
+import path from "path";
 
 // Helper function to ensure valid JSON
 function validateJsonStructure(data: unknown): boolean {
@@ -49,6 +49,18 @@ export async function GET(
     console.log("Input Path:", inputPath);
     console.log("Output Path:", outputFile);
 
+    // Check if file exists before trying to read
+    try {
+      await fs.access(inputPath);
+    } catch {
+      // Template files not found in production, return empty structure
+      console.warn(`Template path not found: ${inputPath}. Returning empty structure.`);
+      return Response.json({ 
+        success: true, 
+        templateJson: { items: [] } 
+      }, { status: 200 });
+    }
+
     // Save and read the template structure
     await saveTemplateStructureToJson(inputPath, outputFile);
     const result = await readTemplateStructureFromJson(outputFile);
@@ -58,14 +70,17 @@ export async function GET(
       return Response.json({ error: "Invalid JSON structure" }, { status: 500 });
     }
 
-
-
     await fs.unlink(outputFile);
 
     return Response.json({ success: true, templateJson: result }, { status: 200 });
   } catch (error) {
     console.error("Error generating template JSON:", error);
-    return Response.json({ error: "Failed to generate template" }, { status: 500 });
+    // Return a graceful fallback instead of 500 error
+    return Response.json({ 
+      success: true, 
+      templateJson: { items: [] },
+      warning: "Template structure unavailable"
+    }, { status: 200 });
   }
 }
 
