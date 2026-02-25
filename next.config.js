@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     remotePatterns: [
       {
@@ -9,7 +8,6 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      
     ],
   },
   async headers() {
@@ -30,8 +28,8 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  reactStrictMode:false,
-  output: 'standalone'
+  reactStrictMode: false,
+  output: 'standalone',
 };
 
-export default nextConfig;
+module.exports = nextConfig;
